@@ -43,6 +43,16 @@ class Client(object):
         else:
             return url
 
+    def _send_request(self, scope, method, endpoint, query=None):
+        if query is None:
+            query = {}
+
+        # Build header first
+        headers = self._build_headers(scope, method, endpoint, query)
+
+        # Build final url here
+        url = self._build_url(scope, method, endpoint, query)
+        
         if method == 'GET':
             response = requests.get(url, headers=headers)
         elif method == 'POST':
