@@ -52,24 +52,30 @@ class Client(object):
 
         # Build final url here
         url = self._build_url(scope, method, endpoint, query)
-
-        try:
-            if method == 'GET':
-                response = requests.get(url, headers = headers).json()
-            elif method == 'POST':
-                response = requests.post(url, headers = headers, json = query).json()
-            elif method == 'DELETE':
-                if query == {}:
-                    response = requests.delete(url, headers = headers).json()
-                else:
-                    response = requests.delete(url, headers = headers, json = query).json()
-        except Exception as e:
-            print ('[x] Error: {}'.format(e.args[0]))
-
-        if 'data' in response:
-            return response['data']
+        
+        if method == 'GET':
+            response = requests.get(url, headers=headers)
+        elif method == 'POST':
+            response = requests.post(url, headers=headers, json=query)
+        elif method == 'DELETE':
+            if query == {}:
+                response = requests.delete(url, headers=headers)
+            else:
+                response = requests.delete(url, headers=headers, json=query)
         else:
-            return response
+            raise NotImplemented("Not implemented request method '%s'" % method)
+
+        http_code_group = str(response.status_code)[0]
+        print(http_code_group)
+        if http_code_group == '4' or http_code_group == '5':  # 4xx or 5xx error?
+            raise ex.HTTPError(f"{response.status_code} {method} {url}", response=response)
+
+        resp_json = response.json()
+
+        if 'data' in resp_json:
+            return resp_json['data']
+        else:
+            return resp_json
 
     # Public API
     def get_public_all_pairs(self):
